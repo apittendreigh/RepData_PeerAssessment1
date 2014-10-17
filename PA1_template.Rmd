@@ -19,11 +19,9 @@ The device collects data at 5 minute intervals throughout the day and consists o
 
 The columns in this raw data set are:
 
-1. **steps**: The number of steps taken in a 5 minute period with missing data indicated with NA
-2. **date**: Dates of the recorded activity in the form of "YYYY-MM-DD"
-3. **interval**: Identifier for the 5 minute interval in which the measurement was taken
-
-This analysis assumes that the raw data file exists and that you have manually extracted in contents into the current working directory.
+1. **steps**: The number of steps taken in a 5 minute period with missing data indicated with NA  
+2. **date**: Dates of the recorded activity in "YYYY-MM-DD" format  
+3. **interval**: Identifier for the 5 minute interval in which the measurement was taken  
 
 ## Goal of Analysis ##
 
@@ -31,13 +29,77 @@ The broad questions that this analysis will answer are:
 
 1. What is the mean total number of steps taken each day?
 2. What is the average daily activity pattern?
-3, Are there differences in activity patterns between weekdays and weekends?
+3. Inputing missing values
+4. Are there differences in activity patterns between weekdays and weekends?
 
 This analysis will answer eaxh of these questions in order and provide a number of tables and plots,
 
 ## Analysis ##
 
+This analysis assumes that the raw data file exists and that you have manually extracted it's contents into the current working directory.
+
 ### Loading and Preprocessing Data ###
 
-Firstly we need to load the data and to see what kind of shape it is in...
+Firstly lets load some needed libraries that will help manipulate the data
+
+```{r}
+library(plyr)
+# No need to see the startup messages when loading dplyr
+suppressPackageStartupMessages(library(dplyr))  
+```
+
+Then load the data and inspect the contents.
+
+```{r}
+activities <- tbl_df(read.csv('activity.csv'))
+
+# Convert the 'date' column to a true date type
+activities$date <- as.Date(activities$date)
+
+activities
+str(activities)
+```
+
+Looks to be pretty tidy data aside from the NA values which will be addressed shortly. We can proceed to perform the analysis for the first set of questions.
+
+### Q1 - What is the mean total number of steps taken per day? ###
+
+The first step is to summarise the data into a new dataframe giving the total number of steps per day. As the missing values can be hard to determine (i.e. they may be zero or may be plenty) we need to remove them from the summary data frame. After summarising the data, let's inspect the new dataframes values
+
+```{r}
+dailyStepsTally <- activities %>%
+    filter(!is.na(steps)) %>%
+    group_by(date) %>%
+    summarise(totalSteps=sum(steps))
+
+dailyStepsTally
+```
+
+Looks to be pretty valid information, so let's plot in out to gain a visual perspective of this data. The plotting system used is ggplot2 by Hadley Wickham.
+
+```{r figure1, fig.width=10, fig.height=5}
+library(ggplot2)
+
+ggplot(subset(dailyStepsTally, !is.na(totalSteps)), aes(date, totalSteps)) +
+    geom_bar(stat="identity", aes(fill=totalSteps)) +
+    ggtitle("Total Daily Steps") +
+    xlab("Date") +
+    ylab("Number of Steps") +
+    theme(axis.text.x=element_text(angle=90))
+```
+
+It would also be handy to know what †he mean and median values for the daily steps taken are:
+
+```{r}
+dailySteps.sum <- sum(dailyStepsTally$totalSteps)
+dailySteps.mean <- format(mean(dailyStepsTally$totalSteps), digits = 9)
+dailySteps.median <- median(dailyStepsTally$totalSteps)
+```
+
+| Sum | Mean | Median |
+|:---:|:----:|:------:|
+| `r dailySteps.sum` | `r dailySteps.mean` | `r dailySteps.median` |     
+
+### Q2 - What is the average daily activity pattern?
+
 
