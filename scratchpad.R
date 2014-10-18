@@ -45,4 +45,27 @@ with (dailyStepsTally, {
 
 # Oh yeah baby that sanswers my first question so lets move on to....
 
-# Q2
+# Q2 What is the average daily activity pattern
+
+#create an aggregate data set from the activities
+activityMeans <- aggregate(steps ~ interval, data=activities, FUN=mean) 
+activityMeans
+
+#looks good so lets plot
+qplot(interval, steps, data=activityMeans) + geom_line()
+
+# OK lets put together a full ggplot
+thePlot <- ggplot(activityMeans, aes(interval, steps))
+thePlot + geom_line()
+last_plot() + ggtitle("Average Steps over 5 Minute Time Intervals")
+last_plot() + xlab("time Intervals") + ylab("Number of Steps")
+
+#get the maximum number of steps from original source
+steps <- activities %>% filter(!is.na(steps)) %>% arrange(steps)
+tail(steps)
+nrow(steps)
+steps$interval[nrow(steps)]
+format(steps$date[nrow(steps)], '%B %d, %Y')
+
+
+# Now to question 3

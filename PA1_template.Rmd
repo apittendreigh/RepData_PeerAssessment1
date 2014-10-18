@@ -81,7 +81,7 @@ Looks to be pretty valid information, so let's plot in out to gain a visual pers
 library(ggplot2)
 
 ggplot(subset(dailyStepsTally, !is.na(totalSteps)), aes(date, totalSteps)) +
-    geom_bar(stat="identity", aes(fill=totalSteps)) +
+    geom_histogram(stat="identity", aes(fill=totalSteps)) +
     ggtitle("Total Daily Steps") +
     xlab("Date") +
     ylab("Number of Steps") +
@@ -102,4 +102,35 @@ dailySteps.median <- median(dailyStepsTally$totalSteps)
 
 ### Q2 - What is the average daily activity pattern?
 
+The aggregate function is used on the original data frame to produce a new data frame with the average number of steps for each time interval over all days. We can examine what this results in by running the code
 
+```{r}
+activityMeans <- aggregate(steps ~ interval, data=activities, FUN=mean) 
+activityMeans
+```
+
+The dataframe has 288 ibservations which equate to every 5 minute time period during a day. This data can then be plotted using ggplot to graphically show the average peaks and troughs of activity through the day.
+
+```{r  figure2, fig.width=10, fig.height=5}
+ggplot(activityMeans, aes(interval, steps)) +
+    geom_line() +
+    ggtitle("Average Steps over 5 Minute Time Intervals") + 
+    xlab("time Intervals") + 
+    ylab("Number of Steps")
+```
+
+This plot shows some rather interesting points. There is very little activity before 5.30am (due to the likelyhood of being asleep) and again from around 9:30pm. The major activity averages out from 8:30am to 9:00am with a lesser spike around lunchtime as well as mid and late afternoon.
+
+To find out when the actual time period has the greatest activity, we need to go back to the original data frame, eliminate the na values and sort it by interval. The last observation in the resulting set is the answer and can be achiewev by running the following code:
+
+```{r}
+steps <- activities %>%
+    filter(!is.na(steps)) %>%
+    arrange(steps)
+
+maxInterval <- steps$interval[nrow(steps)]
+maxDate <- format(steps$date[nrow(steps)], '%B %d, %Y')
+maxSteps <- steps$steps[nrow(steps)]
+```
+
+Giving us the answer that the interval **`r maxInterval`** on **`r maxDate`** had the maximum number of steps, being **`r maxSteps`**.
