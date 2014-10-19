@@ -114,6 +114,12 @@ activities.complete$dayType <- as.factor(activities.complete$dayType)
 # Summarise the data
 stepsTally <- activities.complete %>%
     group_by(dayType, interval) %>%
-    summarise(totalSteps = sum(steps))
+    summarise(avgSteps = mean(steps))
 
 # got the data set now lets plot
+ggplot(stepsTally, aes(interval, avgSteps)) +
+    geom_line() +
+    facet_grid( dayType ~ .) + 
+    ggtitle("Average Steps over 5 Minute Time Intervals") + 
+    xlab("time Intervals") + 
+    ylab("Number of Steps")

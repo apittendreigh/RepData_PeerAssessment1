@@ -78,7 +78,7 @@ dailyStepsTally
 
 Looks to be pretty valid information, so let's plot in out to gain a visual perspective of this data. The plotting system used is ggplot2 by Hadley Wickham.
 
-```{r figure1, fig.width=10, fig.height=5}
+```{r figure1, fig.width=12}
 library(ggplot2)
 
 ggplot(subset(dailyStepsTally, !is.na(totalSteps)), aes(date, totalSteps)) +
@@ -112,7 +112,7 @@ activityMeans
 
 The data-frame has 288 observations which equate to every 5 minute time period during a day. This data can then be plotted using ggplot to graphically show the average peaks and troughs of activity through the day.
 
-```{r  figure2, fig.width=10, fig.height=5}
+```{r  figure2, fig.width=12}
 ggplot(activityMeans, aes(interval, steps)) +
     geom_line() +
     ggtitle("Average Steps over 5 Minute Time Intervals") + 
@@ -176,7 +176,7 @@ dailyStepsTally
 
 ... then plot it...
 
-```{r figure3, fig.width=10, fig.height=5}
+```{r figure3, fig.width=12}
 ggplot(dailyStepsTally, aes(date, totalSteps)) +
     geom_histogram(stat="identity", aes(fill=totalSteps)) +
     ggtitle("Total Daily Steps") +
@@ -201,13 +201,13 @@ dailySteps.median <- median(dailyStepsTally$totalSteps)
 
 Comparing the above plot to that produced for question 1 shows that while the pattern is similar, some of the missing days have been added to the plot. However, there are differences in the mean and mean values in this data set in that both figures are lower by 300-400 steps. This can be explained by adding in the extra data values (>2000) into the set which all tend to now have low step counts.
 
-The analysis done in this assessment was to use the median values of the steps as a whole. While this technique tended not to skew the data signifi=cantly it is far from ideal. A better solution would have been to have used the median values for each corresponding time interval. My thought process on how to do this is shown in the included scratchpad code file, where I simply ran out of time before submission to debug why it was not working as expected. Not doubt reviewing it later will find my error.
+The analysis done in this assessment was to use the median values of the steps as a whole. While this technique tended not to skew the data significantly it is far from ideal. A better solution would have been to have used the median values for each corresponding time interval. My thought process on how to do this is shown in the included scratchpad code file, where I simply ran out of time before submission to debug why it was not working as expected. Not doubt reviewing it later will find my error.
 
 Even so, this technique is still not ideal. In an ideal world we would need to do some further investigation to find out why there are NA values in the original data and then make a better decision on whether to exclude or include them with a transformation.
 
 ### Q4 - Are there differences in activity patterns between weekdays and weekends ###
 
-In order to answer this question it is necessary to be able to identify which date is a weekday and which fall on a weekend. The easiest way to do this is to add a column to our data set identifiying where each date falls.
+In order to answer this question it is necessary to be able to identify which date is a weekday and which fall on a weekend. The easiest way to do this is to add a column to our data set identifying where each date falls.
 
 ```{r}
 activities.complete <- activities.complete %>%
@@ -225,12 +225,18 @@ And then this needs to be tallied up so we have a dataset tabling the total step
 ```{r}
 stepsTally <- activities.complete %>%
     group_by(dayType, interval) %>%
-    summarise(totalSteps = sum(steps))
+    summarise(avgSteps = mean(steps))
 
 stepsTally
 ```
 
 Which will allow us to plot the weekday and weekend activity for comparison.
 
-```{r figure4, fig.width=10}
+```{r figure4, fig.width=12}
+ggplot(stepsTally, aes(interval, avgSteps)) +
+    geom_line() +
+    facet_grid( dayType ~ .) + 
+    ggtitle("Average Steps over 5 Minute Time Intervals") + 
+    xlab("time Intervals") + 
+    ylab("Number of Steps")
 ```
