@@ -6,6 +6,7 @@ output:
   html_document:
     keep_md: true
 ---
+# Reproducible Research: Peer Assessment 1 #
 
 ## Introduction ##
 
@@ -29,10 +30,10 @@ The broad questions that this analysis will answer are:
 
 1. What is the mean total number of steps taken each day?
 2. What is the average daily activity pattern?
-3. Inputing missing values
+3. Inputting missing values
 4. Are there differences in activity patterns between weekdays and weekends?
 
-This analysis will answer eaxh of these questions in order and provide a number of tables and plots,
+This analysis will answer each of these questions in order and provide a number of tables and plots,
 
 ## Analysis ##
 
@@ -64,7 +65,7 @@ Looks to be pretty tidy data aside from the NA values which will be addressed sh
 
 ### Q1 - What is the mean total number of steps taken per day? ###
 
-The first step is to summarise the data into a new dataframe giving the total number of steps per day. As the missing values can be hard to determine (i.e. they may be zero or may be plenty) we need to remove them from the summary data frame. After summarising the data, let's inspect the new dataframes values
+The first step is to summarise the data into a new data-frame giving the total number of steps per day. As the missing values can be hard to determine (i.e. they may be zero or may be plenty) we need to remove them from the summary data frame. After summarising the data, let's inspect the new data frames values
 
 ```{r}
 dailyStepsTally <- activities %>%
@@ -97,10 +98,10 @@ dailySteps.median <- median(dailyStepsTally$totalSteps)
 ```
 
 | Sum | Mean | Median |
-|:---:|:----:|:------:|
+|----:|-----:|-------:|
 | `r dailySteps.sum` | `r dailySteps.mean` | `r dailySteps.median` |     
 
-### Q2 - What is the average daily activity pattern?
+### Q2 - What is the average daily activity pattern? ###
 
 The aggregate function is used on the original data frame to produce a new data frame with the average number of steps for each time interval over all days. We can examine what this results in by running the code
 
@@ -109,7 +110,7 @@ activityMeans <- aggregate(steps ~ interval, data=activities, FUN=mean)
 activityMeans
 ```
 
-The dataframe has 288 ibservations which equate to every 5 minute time period during a day. This data can then be plotted using ggplot to graphically show the average peaks and troughs of activity through the day.
+The data-frame has 288 observations which equate to every 5 minute time period during a day. This data can then be plotted using ggplot to graphically show the average peaks and troughs of activity through the day.
 
 ```{r  figure2, fig.width=10, fig.height=5}
 ggplot(activityMeans, aes(interval, steps)) +
@@ -119,9 +120,9 @@ ggplot(activityMeans, aes(interval, steps)) +
     ylab("Number of Steps")
 ```
 
-This plot shows some rather interesting points. There is very little activity before 5.30am (due to the likelyhood of being asleep) and again from around 9:30pm. The major activity averages out from 8:30am to 9:00am with a lesser spike around lunchtime as well as mid and late afternoon.
+This plot shows some rather interesting points. There is very little activity before 5.30am (due to the likelihood of being asleep) and again from around 9:30pm. The major activity averages out from 8:30am to 9:00am with a lesser spike around lunchtime as well as mid and late afternoon.
 
-To find out when the actual time period has the greatest activity, we need to go back to the original data frame, eliminate the na values and sort it by interval. The last observation in the resulting set is the answer and can be achiewev by running the following code:
+To find out when the actual time period has the greatest activity, we need to go back to the original data frame, eliminate the na values and sort it by interval. The last observation in the resulting set is the answer and can be achieve by running the following code:
 
 ```{r}
 steps <- activities %>%
@@ -134,3 +135,102 @@ maxSteps <- steps$steps[nrow(steps)]
 ```
 
 Giving us the answer that the interval **`r maxInterval`** on **`r maxDate`** had the maximum number of steps, being **`r maxSteps`**.
+
+### Q3 - Inputting missing values ###
+
+We need to check to see what missing values are contained in the original data. In the previous questions they have simply been eliminated from the analysis. This is one method to handle missing values but certainly not the only one. In this section we will discuss another method of dealing with these missing values, and what the ramifications of this method is.
+
+Firstly we need to check the original data set and find out how many missing values need to be handled.
+
+```{r}
+table(is.na(activities$date))
+table(is.na(activities$interval))
+table(is.na(activities$steps))
+```
+
+As expected there are no missing values for the date or the interval columns, leaving only the steps column to deal with. Lets replace these missing values with the median values (not ideal as discussed below). 
+
+First create a new data-frame with the NA values replaced by the median steps.
+
+```{r}
+activities.complete <- activities %>%
+    group_by(interval) %>%
+    mutate(steps = ifelse(is.na(steps), 
+                          median(steps, na.rm = T), 
+                          steps))
+
+table(is.na(activities.complete$steps))
+```
+
+And let's plot this data to visualise the total steps again to compare it to the first figure in this assessment. 
+
+Firstly we need to summarise the data...
+
+```{r}
+dailyStepsTally <- activities.complete %>%
+    group_by(date) %>%
+    summarise(totalSteps=sum(steps))
+
+dailyStepsTally
+```
+
+... then plot it...
+
+```{r figure3, fig.width=10, fig.height=5}
+ggplot(dailyStepsTally, aes(date, totalSteps)) +
+    geom_histogram(stat="identity", aes(fill=totalSteps)) +
+    ggtitle("Total Daily Steps") +
+    xlab("Date") +
+    ylab("Number of Steps") +
+    theme(axis.text.x=element_text(angle=90))
+```
+
+... and finally calculate the mean and median of this new data set.
+
+```{r}
+dailySteps.sum <- sum(dailyStepsTally$totalSteps)
+dailySteps.mean <- format(mean(dailyStepsTally$totalSteps), digits = 8)
+dailySteps.median <- median(dailyStepsTally$totalSteps)
+```
+
+| Sum | Mean | Median |
+|----:|-----:|-------:|
+| `r dailySteps.sum` | `r dailySteps.mean` | `r dailySteps.median` |     
+
+#### Conclusion ####
+
+Comparing the above plot to that produced for question 1 shows that while the pattern is similar, some of the missing days have been added to the plot. However, there are differences in the mean and mean values in this data set in that both figures are lower by 300-400 steps. This can be explained by adding in the extra data values (>2000) into the set which all tend to now have low step counts.
+
+The analysis done in this assessment was to use the median values of the steps as a whole. While this technique tended not to skew the data signifi=cantly it is far from ideal. A better solution would have been to have used the median values for each corresponding time interval. My thought process on how to do this is shown in the included scratchpad code file, where I simply ran out of time before submission to debug why it was not working as expected. Not doubt reviewing it later will find my error.
+
+Even so, this technique is still not ideal. In an ideal world we would need to do some further investigation to find out why there are NA values in the original data and then make a better decision on whether to exclude or include them with a transformation.
+
+### Q4 - Are there differences in activity patterns between weekdays and weekends ###
+
+In order to answer this question it is necessary to be able to identify which date is a weekday and which fall on a weekend. The easiest way to do this is to add a column to our data set identifiying where each date falls.
+
+```{r}
+activities.complete <- activities.complete %>%
+    mutate(dayType = ifelse(weekdays(date) == 'Saturday' | 
+                            weekdays(date) == 'Sunday', 
+                            'Weekend', 'Weekday'))
+
+activities.complete$dayType <- as.factor(activities.complete$dayType)
+
+activities.complete
+```
+
+And then this needs to be tallied up so we have a dataset tabling the total steps for each time interval broken down by weekdays and weekends.
+
+```{r}
+stepsTally <- activities.complete %>%
+    group_by(dayType, interval) %>%
+    summarise(totalSteps = sum(steps))
+
+stepsTally
+```
+
+Which will allow us to plot the weekday and weekend activity for comparison.
+
+```{r figure4, fig.width=10}
+```

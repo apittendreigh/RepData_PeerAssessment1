@@ -68,4 +68,52 @@ steps$interval[nrow(steps)]
 format(steps$date[nrow(steps)], '%B %d, %Y')
 
 
-# Now to question 3
+# Now to question 3 Inputing Missing Values
+
+# Check the number of na values
+count(activities$date[is.na(activities$date)])
+count(activities$interval[is.na(activities$interval)])
+count(activities$steps[is.na(activities$steps)])
+
+# Try replacing the NA values with mean of all non na steps
+activities.complete <- activities %>%
+    group_by(interval) %>%
+    mutate(steps = ifelse(is.na(steps), round(mean(steps, na.rm = T), 0), steps))
+
+count(activities.complete$steps[is.na(activities.complete$steps)])
+View(activities.complete)
+
+# all looks complete - at least no more NA's, but lets try 
+# something a little smarter
+
+# lets do a median for each time interval
+med.act <- activities %>% 
+    filter(!is.na(steps)) %>%
+    group_by(interval) %>% 
+    summarise(medianSteps = median(steps))
+
+# And substitude NAs with values from the median dataframe
+activities.complete <- activities %>%
+    group_by(interval) %>%
+    mutate(steps = ifelse(is.na(steps), med.act$medianSteps[interval = med.act$interva], steps))
+
+table(is.na(activities.complete$steps))
+
+# not working - it's still leaving in NA values
+# due time cinstrainsts go with first option
+
+
+# On to Q4 differences between qweekdays and weekendsx
+
+# Indicate if each day in the data set is wekday or weekend
+activities.complete <- activities.complete %>%
+    mutate(dayType = ifelse(weekdays(date) == 'Saturday' | 
+                            weekdays(date) == 'Sunday', 'Weekend', 'Weekday'))
+activities.complete$dayType <- as.factor(activities.complete$dayType)    
+
+# Summarise the data
+stepsTally <- activities.complete %>%
+    group_by(dayType, interval) %>%
+    summarise(totalSteps = sum(steps))
+
+# got the data set now lets plot
